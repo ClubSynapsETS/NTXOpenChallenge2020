@@ -21,6 +21,8 @@ public class GameUDPManager : MonoBehaviour
 
     private void Awake()
     {
+        // Set the culture to english, to force numbers to respect the english format.
+        // e.g. "en-us" is formatted as 5.0 and "fr-ca" is formatted as 5,0.
         var culture = new CultureInfo("en-US");
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
@@ -29,7 +31,8 @@ public class GameUDPManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Application.targetFrameRate = 200;
+        Application.targetFrameRate = 200; // target an average of 200 FPS
+
         m_Text = GameObject.Find("udp_values").GetComponent<TextMeshProUGUI>();
         m_Slider = GameObject.Find("Slider").GetComponent<Slider>();
         sliderOverride = GameObject.Find("SliderOverride").GetComponent<Slider>();
@@ -43,13 +46,12 @@ public class GameUDPManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         if (toggle.isOn)
         {
             myoValue = sliderOverride.value;
             m_Text.text = string.Format("Override value: {0}", sliderOverride.value.ToString("0.00"));
 
-            MovePlatform();
+            MoveRotator();
             return; // exit update()
         }
 
@@ -66,18 +68,17 @@ public class GameUDPManager : MonoBehaviour
             m_Slider.value = result;
         }
 
-
-        MovePlatform();
+        MoveRotator();
     }
 
-    private void MovePlatform()
+    private void MoveRotator()
     {
-        // Map Range, map the myoValue, from [0,5] to [0,1]
+        // Map Range, map the value, from [0,5] to [1,0]
         float speedRotator = Mathf.Lerp(1, 0, Mathf.InverseLerp(0, 5, myoValue));
 
         foreach (var item in rotator)
         {
-            item.percentSpeed = speedRotator;
+            item.percentSpeed = speedRotator; // Normal speed is 1.0 or 100%
         }
     }
 
@@ -99,5 +100,11 @@ public class GameUDPManager : MonoBehaviour
             m_Text.text = string.Format("Error: {0}", e.Message);
             socket = null;
         }
+    }
+
+    public void OnApplicationQuit()
+    {
+        // Close open socket before the application quit
+        socket.AbortConnection();
     }
 }
